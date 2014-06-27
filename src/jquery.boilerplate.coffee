@@ -44,10 +44,80 @@ do ($ = jQuery, window, document) ->
         header_array.push($(this).text())
 
       # With the headers, create the UL
-      $header_list = $('<ul/>');
-      $list_container.append($header_list);
-      for header in header_array
-        $header_list.append("<li>" + header + "</li>")
+      $top_list = $('<ul/>')
+      $list_container.append($top_list)
+      #for header in header_array
+      #  $top_list.append("<li>" + header + "</li>")
+      
+      # startList = ($headers, $top) ->
+      #   #implicit returns on the last 
+      #   #headers are what you have left
+      #   #top is the topmost list
+      #   $headers = $headers.clone() 
+      #   #first append new list
+      #   $inner = $('<ul/>')
+      #   $top.append($inner)
+      #   $inner.append("<li>" + $headers.eq(0).text() + "</li>")
+      #   current_level = parseInt $headers.get(0).nodeName.substring(1)
+      #   counter = 0
+      #   first_length = $headers.length
+      #   while counter < first_length
+      #     console.log "removing " + $headers.eq(0).text()
+      #     $headers = $headers.slice(1)
+      #     if $headers.length > 0
+      #       h_level = parseInt $headers.get(0).nodeName.substring(1)
+      #       console.log "h_level: " + h_level
+      #       console.log "current_level " + current_level
+         
+
+      #       if(h_level > current_level)
+      #         # recursive call
+      #         console.log "starting recursive call"
+      #         startList $headers, $inner
+      #       else if(h_level < current_level) 
+      #         $headers = $headers.slice(1)
+      #         #startList $headers, $inner
+      #         break
+
+      #       else
+              
+      #         $inner.append("<li>" + $headers.eq(0).text() + "</li>")
+      #         counter = counter + 1
+      #     else
+      #       break
+      #   #$.each $headers, (i, header) ->
+      
+      startList = ($headers, $top, last_level) ->
+        i = 0
+        while  $headers.length != 0
+        #$.each $headers, (i, header) ->
+          console.log 'last_level: ' + last_level
+          $current = $headers.get(0)
+          current_level = parseInt $headers.get(0).nodeName.substring(1)
+          console.log 'current_level: ' + current_level
+          if current_level == last_level 
+            item = "<li>" + $headers.eq(0).text() + "</li>"
+            $top.append(item)
+            $headers = $headers.slice(1)
+            i = i + 1
+          else if current_level > last_level
+            $list = $('<ul/>')
+            $top.append($list)
+            item = "<li>" + $headers.eq(0).text() + "</li>"
+            $list.append(item)
+            $headers = $headers.slice(1)
+            i = 0
+            current_level = last_level
+            #startList $headers, $list, current_level
+          else if current_level < last_level
+            console.log "About to start recursion, current_level = " + current_level
+            startList $headers, $top, current_level
+         
+         
+      startList $headers, $top_list, 1
+      #$.each $headers, (i, header) ->
+        
+    
 
       # The right sidebar list is now created
       # Need to set first child as active

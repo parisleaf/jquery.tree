@@ -22,7 +22,7 @@
       };
 
       Plugin.prototype.init = function() {
-        var $content, $header_list, $headers, $list_container, header, header_array, _i, _len;
+        var $content, $headers, $list_container, $top_list, header_array, startList;
         console.log("Plugin initialization");
         $content = $(this.settings.content);
         $list_container = $(this.settings.list);
@@ -31,12 +31,40 @@
         $headers.each(function() {
           return header_array.push($(this).text());
         });
-        $header_list = $('<ul/>');
-        $list_container.append($header_list);
-        for (_i = 0, _len = header_array.length; _i < _len; _i++) {
-          header = header_array[_i];
-          $header_list.append("<li>" + header + "</li>");
-        }
+        $top_list = $('<ul/>');
+        $list_container.append($top_list);
+        startList = function($headers, $top, last_level) {
+          var $current, $list, current_level, i, item, _results;
+          i = 0;
+          _results = [];
+          while ($headers.length !== 0) {
+            console.log('last_level: ' + last_level);
+            $current = $headers.get(0);
+            current_level = parseInt($headers.get(0).nodeName.substring(1));
+            console.log('current_level: ' + current_level);
+            if (current_level === last_level) {
+              item = "<li>" + $headers.eq(0).text() + "</li>";
+              $top.append(item);
+              $headers = $headers.slice(1);
+              _results.push(i = i + 1);
+            } else if (current_level > last_level) {
+              $list = $('<ul/>');
+              $top.append($list);
+              item = "<li>" + $headers.eq(0).text() + "</li>";
+              $list.append(item);
+              $headers = $headers.slice(1);
+              i = 0;
+              _results.push(current_level = last_level);
+            } else if (current_level < last_level) {
+              console.log("About to start recursion, current_level = " + current_level);
+              _results.push(startList($headers, $top, current_level));
+            } else {
+              _results.push(void 0);
+            }
+          }
+          return _results;
+        };
+        startList($headers, $top_list, 1);
         $('li:first').addClass('active');
         this.isOnScreen;
         return $(window).scroll(function() {
@@ -67,3 +95,5 @@
   })(jQuery, window, document);
 
 }).call(this);
+
+//# sourceMappingURL=jquery.boilerplate.js.map

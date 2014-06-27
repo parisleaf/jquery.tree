@@ -52,7 +52,11 @@ module.exports = function(grunt) {
 			compile: {
 				files: {
 					"dist/jquery.boilerplate.js": "src/jquery.boilerplate.coffee"
-				}
+				},
+                                options: {
+                                    sourceMap: true
+                                }
+
 			}
 		}
 
