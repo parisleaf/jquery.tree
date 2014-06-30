@@ -34,30 +34,40 @@
         $top_list = $('<ul/>');
         $list_container.append($top_list);
         startList = function($headers, $top, last_level) {
-          var $current, $list, current_level, i, item, _results;
-          i = 0;
+          var $current, $list, current_level, i, inner, item, step_level, _i, _ref, _results;
           _results = [];
-          while ($headers.length !== 0) {
+          for (i = _i = 0, _ref = $headers.length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
             console.log('last_level: ' + last_level);
-            $current = $headers.get(0);
-            current_level = parseInt($headers.get(0).nodeName.substring(1));
+            $current = $headers.get(i);
+            current_level = parseInt($headers.get(i).nodeName.substring(1));
             console.log('current_level: ' + current_level);
             if (current_level === last_level) {
-              item = "<li>" + $headers.eq(0).text() + "</li>";
-              $top.append(item);
-              $headers = $headers.slice(1);
-              _results.push(i = i + 1);
+              console.log("[equals] " + $headers.eq(i).text());
+              item = "<li>" + $headers.eq(i).text() + "</li>";
+              _results.push($top.append(item));
             } else if (current_level > last_level) {
               $list = $('<ul/>');
               $top.append($list);
-              item = "<li>" + $headers.eq(0).text() + "</li>";
+              item = "<li>" + $headers.eq(i).text() + "</li>";
               $list.append(item);
-              $headers = $headers.slice(1);
-              i = 0;
-              _results.push(current_level = last_level);
+              $top = $list;
+              _results.push(last_level = current_level);
             } else if (current_level < last_level) {
-              console.log("About to start recursion, current_level = " + current_level);
-              _results.push(startList($headers, $top, current_level));
+              console.log("[current < last]" + $headers.eq(i).text());
+              step_level = last_level;
+              inner = i - 1;
+              while (current_level !== step_level) {
+                step_level = parseInt($headers.get(inner).nodeName.substring(1));
+                if (step_level !== last_level) {
+                  $top = $top.parent();
+                }
+                console.log("current_level after loop: " + current_level);
+                inner = inner - 1;
+                console.log("last_level after loop: " + last_level);
+              }
+              item = "<li>" + $headers.eq(i).text() + "</li>";
+              $top.append(item);
+              _results.push(last_level = parseInt($headers.get(i).nodeName.substring(1)));
             } else {
               _results.push(void 0);
             }

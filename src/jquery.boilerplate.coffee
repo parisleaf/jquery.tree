@@ -88,31 +88,49 @@ do ($ = jQuery, window, document) ->
       #   #$.each $headers, (i, header) ->
       
       startList = ($headers, $top, last_level) ->
-        i = 0
-        while  $headers.length != 0
+        
+        for i in [0..$headers.length-1]
         #$.each $headers, (i, header) ->
           console.log 'last_level: ' + last_level
-          $current = $headers.get(0)
-          current_level = parseInt $headers.get(0).nodeName.substring(1)
+          $current = $headers.get(i)
+          current_level = parseInt $headers.get(i).nodeName.substring(1)
           console.log 'current_level: ' + current_level
           if current_level == last_level 
-            item = "<li>" + $headers.eq(0).text() + "</li>"
+            console.log("[equals] " + $headers.eq(i).text())
+            item = "<li>" + $headers.eq(i).text() + "</li>"
             $top.append(item)
-            $headers = $headers.slice(1)
-            i = i + 1
+            #$headers = $headers.slice(1)
           else if current_level > last_level
             $list = $('<ul/>')
             $top.append($list)
-            item = "<li>" + $headers.eq(0).text() + "</li>"
+            item = "<li>" + $headers.eq(i).text() + "</li>"
             $list.append(item)
-            $headers = $headers.slice(1)
-            i = 0
-            current_level = last_level
+            $top = $list
+            #$headers = $headers.slice(1)
+            last_level = current_level
             #startList $headers, $list, current_level
           else if current_level < last_level
-            console.log "About to start recursion, current_level = " + current_level
-            startList $headers, $top, current_level
-         
+            console.log("[current < last]" + $headers.eq(i).text())
+            #append and delete that last item
+            #while current_level < last_level
+            #  $top = $top.parent()
+            #  last_level = last_level - 1
+            step_level = last_level
+            inner = i-1
+            while current_level != step_level
+              step_level = parseInt $headers.get(inner).nodeName.substring(1)
+              if step_level != last_level
+                $top = $top.parent()
+              console.log "current_level after loop: " + current_level
+              inner = inner - 1
+              console.log "last_level after loop: " + last_level
+
+            item = "<li>" + $headers.eq(i).text() + "</li>"
+            $top.append(item)
+            last_level = parseInt $headers.get(i).nodeName.substring(1)
+             #$headers = $headers.slice(1)
+             # startList $headers, $top, current_level
+            #break
          
       startList $headers, $top_list, 1
       #$.each $headers, (i, header) ->
