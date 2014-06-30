@@ -21,72 +21,66 @@
         return console.log(win.scrollTop());
       };
 
-      Plugin.prototype.init = function() {
-        var $content, $headers, $list_container, $top_list, header_array, startList;
-        console.log("Plugin initialization");
-        $content = $(this.settings.content);
-        $list_container = $(this.settings.list);
-        $headers = $content.children(':header');
-        header_array = [];
-        $headers.each(function() {
-          return header_array.push($(this).text());
-        });
-        $top_list = $('<ul/>');
-        $list_container.append($top_list);
-        startList = function($headers, $top, last_level) {
-          var $current, $list, current_level, i, inner, item, step_level, _i, _ref, _results;
-          _results = [];
-          for (i = _i = 0, _ref = $headers.length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
-            console.log('last_level: ' + last_level);
-            $current = $headers.get(i);
-            current_level = parseInt($headers.get(i).nodeName.substring(1));
-            console.log('current_level: ' + current_level);
-            if (current_level === last_level) {
-              console.log("[equals] " + $headers.eq(i).text());
-              item = "<li>" + $headers.eq(i).text() + "</li>";
-              _results.push($top.append(item));
-            } else if (current_level > last_level) {
-              $list = $('<ul/>');
-              $top.append($list);
-              item = "<li>" + $headers.eq(i).text() + "</li>";
-              $list.append(item);
-              $top = $list;
-              _results.push(last_level = current_level);
-            } else if (current_level < last_level) {
-              console.log("[current < last]" + $headers.eq(i).text());
-              step_level = last_level;
-              inner = i - 1;
-              while (current_level !== step_level) {
-                step_level = parseInt($headers.get(inner).nodeName.substring(1));
-                if (step_level !== last_level) {
-                  $top = $top.parent();
-                }
-                console.log("current_level after loop: " + current_level);
-                inner = inner - 1;
-                console.log("last_level after loop: " + last_level);
-              }
-              item = "<li>" + $headers.eq(i).text() + "</li>";
-              $top.append(item);
-              _results.push(last_level = parseInt($headers.get(i).nodeName.substring(1)));
-            } else {
-              _results.push(void 0);
-            }
+      Plugin.prototype.headerDepth = function(el) {
+        return parseInt(el.nodeName.slice(-1));
+      };
+
+      Plugin.prototype.topHeaderLevel = function($content) {
+        var num, _i;
+        for (num = _i = 1; _i <= 6; num = ++_i) {
+          if ($content.find("h" + num).length > 0) {
+            return num;
           }
-          return _results;
-        };
-        startList($headers, $top_list, 1);
+        }
+        return null;
+      };
+
+      Plugin.prototype.init = function() {
+        var $allContent, $headers, $list, $listContainer, listify;
+        $allContent = $(this.settings.content);
+        $listContainer = $(this.settings.list);
+        $headers = $allContent.find(':header');
+        listify = (function(_this) {
+          return function($content) {
+            var $firstChild, $list, $preamble, $topLevelHeaders, topHeaderLevel;
+            topHeaderLevel = _this.topHeaderLevel($content);
+            if (topHeaderLevel == null) {
+              return null;
+            }
+            $list = $("<ul/>");
+            $topLevelHeaders = $content.find("h" + topHeaderLevel);
+            $firstChild = $content.find(":first-child");
+            if (!$firstChild.is($topLevelHeaders)) {
+              $preamble = $firstChild.nextUntil($topLevelHeaders).addBack().clone().wrapAll("<div/>").parent();
+              $preamble = $preamble.wrapAll("<div/>");
+              $list.append(listify($preamble));
+            }
+            $topLevelHeaders.each(function() {
+              var $between, $header, $item, $link;
+              $header = $(this);
+              $link = $('<a/>').html($header.html());
+              $item = $('<li/>').append($link);
+              $list.append($item);
+              $between = $header.nextUntil($topLevelHeaders).clone().wrapAll("<div/>").parent();
+              return $list.append(listify($between));
+            });
+            return $list;
+          };
+        })(this);
+        $list = listify($allContent);
+        $listContainer.append($list);
         $('li:first').addClass('active');
         this.isOnScreen;
         return $(window).scroll(function() {
           return $.each($headers, function(i, header) {
-            var $current, $list, difference;
+            var $current, $li, difference;
             $current = $(header);
             difference = $current.offset().top - $(window).scrollTop();
             if (difference < 100) {
               $('.active').removeClass('active');
               $current.addClass('active');
-              $list = $('li');
-              return $($list.get(i)).addClass('active');
+              $li = $('li');
+              return $($li.get(i)).addClass('active');
             }
           });
         });

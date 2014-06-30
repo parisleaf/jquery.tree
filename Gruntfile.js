@@ -53,10 +53,9 @@ module.exports = function(grunt) {
 				files: {
 					"dist/jquery.boilerplate.js": "src/jquery.boilerplate.coffee"
 				},
-                                options: {
-                                    sourceMap: true
-                                }
-
+        options: {
+            sourceMap: true
+        }
 			}
 		}
 
