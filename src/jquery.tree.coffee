@@ -135,7 +135,7 @@ do (factory, window, document) ->
     define(['jquery'], factory)
   else if typeof exports is 'object'
     # Node/CommonJS
-    factory(require('jquery'))
+    factory(require('jquery'), window, document)
   else
     # Browser globals
     factory(jQuery, window, document)

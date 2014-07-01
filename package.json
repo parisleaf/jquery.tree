@@ -6,6 +6,7 @@
     "type": "git",
     "url": "https://github.com/parisleaf/jquery.tree.git"
   },
+  "main": "lib/jquery.tree.js",
   "keywords": [
     "menu",
     "spy",
@@ -20,5 +21,8 @@
   },
   "devDependencies": {
     "coffee-script": "~1.7.1"
+  },
+  "dependencies": {
+    "jquery": "~2.1.1"
   }
 }
