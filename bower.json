@@ -1,18 +1,30 @@
 {
-	"name": "jquery-boilerplate",
-	"version": "3.3.4",
-	"homepage": "http://jqueryboilerplate.com",
-	"authors": [
-		"Zeno Rocha <hi@zenorocha.com>"
-	],
-	"description": "A jump-start for jQuery plugins development.",
-	"main": "src/jquery.boilerplate.js",
-	"keywords": [
-		"jquery",
-		"plugin",
-		"boilerplate",
-		"jquery-plugin",
-		"jquery-boilerplate"
-	],
-	"license": "MIT"
+  "name": "jquery.tree",
+  "version": "0.0.1",
+  "homepage": "https://github.com/parisleaf/jquery.tree",
+  "authors": [
+    "Parisleaf <webadmin@parisleaf.com>"
+  ],
+  "description": "Automatic table of contents generation",
+  "moduleType": [
+    "amd",
+    "node"
+  ],
+  "keywords": [
+    "menu",
+    "spy",
+    "jquery",
+    "anchor",
+    "toc"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "demo"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.1"
+  }
 }
