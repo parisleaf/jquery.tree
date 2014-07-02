@@ -1,6 +1,6 @@
 {
   "name": "jquery.tree",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Automatic table of contents generation",
   "repository": {
     "type": "git",
