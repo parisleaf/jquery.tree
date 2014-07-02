@@ -14,6 +14,8 @@ factory = ($ = jQuery, window, document) ->
   # Plugin class
   class Plugin
     constructor: (@element, options) ->
+      self = this
+
       @_name = PLUGIN_NAME
       @settings = $.extend {}, defaults, options
       @_defaults = defaults
@@ -26,6 +28,7 @@ factory = ($ = jQuery, window, document) ->
       $listContainer = $(@settings.list)
 
       $headers = $content.find(':header')
+
 
       # Recursive function that generates a table of contents list from a collection of nodes
       listify = ($nodes) =>
@@ -58,8 +61,23 @@ factory = ($ = jQuery, window, document) ->
           else
             listifyBetween()
 
-            # Construct list item
+            # Construct link
             $link = $('<a/>').html($node.html())
+
+            # Give header an id
+            id = $node.attr('id')
+            if not id?
+              id = $node.text().toLowerCase().replace(/\s+/g, '-')
+
+              # Check if id is already on page
+              id = self.idCheck(id)
+
+              $node.attr('id', id)
+
+            # Set link href to header id
+            $link.attr('href', "##{id}")
+
+            # Construct list item
             $item = $('<li/>').append($link)
 
             # Attach reference from node to item, and vice versa
@@ -107,7 +125,18 @@ factory = ($ = jQuery, window, document) ->
         if $nodes.is("h#{num}")
           return num
 
-      return null 
+      return null
+
+    idCheck = (id) ->
+      if $("##{id}").length > 0
+        id += 0
+        return idCheck(id)
+      else
+        return id
+
+    idCheck: idCheck
+
+    window.idCheck = idCheck
 
   # A really lightweight plugin wrapper around the constructor,
   # preventing against multiple instantiations
