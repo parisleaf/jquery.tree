@@ -5,103 +5,78 @@ factory = ($ = jQuery, window, document) ->
   # minified (especially when both are regularly referenced in your plugin).
 
   # Create the defaults once
-  pluginName = "tree"
-  defaults =
-    content: ".content"
-    list: ".list"
+  PLUGIN_NAME = 'tree'
 
-  # The actual plugin constructor
+  defaults =
+    content: '.content'
+    list:    '.list'
+
+  # Plugin class
   class Plugin
     constructor: (@element, options) ->
-      # jQuery has an extend method which merges the contents of two or
-      # more objects, storing the result in the first object. The first object
-      # is generally empty as we don't want to alter the default options for
-      @_name = pluginName
-            # future instances of the plugin
+      @_name = PLUGIN_NAME
       @settings = $.extend {}, defaults, options
       @_defaults = defaults
-      @init()
+      
+      $content = $(@settings.content)
 
-    isOnScreen: ->
-      win = $(window)
-      console.log win.scrollTop()
-     
-    headerDepth: (el) ->
-      return parseInt(el.nodeName.slice(-1))
+      # Descendents of content
+      $contentNodes = $content.find('*')
 
-    topHeaderLevel: ($content) ->
-      for num in [1..6]
-        if $content.find("h#{num}").length > 0
-          return num
-
-      return null
-
-    init: ->
-      # Place initialization logic here
-
-      ## Andrew
-
-
-      $allContent = $(@settings.content)
       $listContainer = $(@settings.list)
 
-      $headers = $allContent.find(':header')
+      $headers = $content.find(':header')
 
-      # Returns list of headers found in $content
-      listify = ($content) =>
+      # Recursive function that generates a table of contents list from a collection of nodes
+      listify = ($nodes) =>
 
-        # Get top level header found in content
-        topHeaderLevel = @topHeaderLevel($content)
+        # Get top header level found in collection
+        topHeaderLevel = @topHeaderLevel($nodes)
 
-        # Exit if content has no headers
+        # Exit if none of the nodes are headers
         if not topHeaderLevel? then return null
 
         # Create list
         $list = $("<ul/>")
 
-        # Get all the top level headers
-        $topLevelHeaders = $content.find("h#{topHeaderLevel}")
+        # Initialize empty jQuery object to contain nodes that fall between top-level headers
+        $between = $()
 
-        # If first element in content is not a top-level header,
-        # recursively call listify
-        $firstChild = $content.find(":first-child")
-        if not $firstChild.is($topLevelHeaders)
-          $preamble = $firstChild.nextUntil($topLevelHeaders)
-            .addBack()
-            .clone()
-            .wrapAll("<div/>")
-            .parent()
+        # Function to recursively listify and reset $between
+        listifyBetween = ->
+          if $between.length > 0
+            $list.find("li").last().append(listify($between))
+            $between = $()
 
-          $preamble = $preamble.wrapAll("<div/>")
-          $list.append(listify($preamble))
+        # Loop through nodes
+        $nodes.each ->
+          $node = $(this)
 
-        # Loop through each top level header
-        $topLevelHeaders.each ->
-          $header = $(this)
+          # Check if current node is not a top level header
+          if not $node.is("h#{topHeaderLevel}")
+            $between = $between.add($node)
+          else
+            listifyBetween()
 
-          # Construct list item and append to list
-          $link = $('<a/>').html($header.html())
-          $item = $('<li/>').append($link)
-          $list.append($item)
+            # Construct list item
+            $link = $('<a/>').html($node.html())
+            $item = $('<li/>').append($link)
 
-          # Wrap content until next header and recursively call listify
-          $between = $header
-            .nextUntil($topLevelHeaders)
-            .clone()
-            .wrapAll("<div/>")
-            .parent()
+            # Attach reference from node to item, and vice versa
+            $item.data("plugin_#{PLUGIN_NAME}_header", $node)
+            $node.data("plugin_#{PLUGIN_NAME}_item", $item)
 
-          $list.append(listify($between))
+            $list.append($item)
+
+        # OBOE
+        listifyBetween()
 
         return $list
 
-      $list = listify($allContent)
+      $list = listify($contentNodes)
 
-      $listContainer.append($list)
-
-      ## end Andrew
-        
-    
+      $listContainer.append($list)        
+      
 
       # The right sidebar list is now created
       # Need to set first child as active
@@ -118,15 +93,28 @@ factory = ($ = jQuery, window, document) ->
             $current.addClass('active')
             #now find the current list item to activate
             $li = $('li')
-            $($li.get(i)).addClass('active') 
+            $($li.get(i)).addClass('active')
 
+    isOnScreen: ->
+      win = $(window)
+      console.log win.scrollTop()
+     
+    headerDepth: (el) ->
+      return parseInt(el.nodeName.slice(-1))
+
+    topHeaderLevel: ($nodes) ->
+      for num in [1..6]
+        if $nodes.is("h#{num}")
+          return num
+
+      return null 
 
   # A really lightweight plugin wrapper around the constructor,
   # preventing against multiple instantiations
-  $.fn[pluginName] = (options) ->
+  $.fn[PLUGIN_NAME] = (options) ->
     @each ->
-      unless $.data @, "plugin_#{pluginName}"
-        $.data @, "plugin_#{pluginName}", new Plugin @, options
+      unless $.data @, "plugin_#{PLUGIN_NAME}"
+        $.data @, "plugin_#{PLUGIN_NAME}", new Plugin @, options
 
 # Register module
 do (factory, window, document) -> 
