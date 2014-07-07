@@ -47,7 +47,7 @@ $('.content-area').tree({
 });
 ```
 
-The default is `:header`, which matches all header elements. A future release will allow the use non-header elements, but for now, only h1 through h6 elements are supported. (Non-headers won't break the plugin --- they just won't generate list items.)
+The default is `:header`, which matches all header elements. A future release will allow the use non-header elements, but for now, only h1 through h6 elements are supported. (Non-headers won't break the plugin -- they just won't generate list items.)
 
 ## TODO
 
