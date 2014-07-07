@@ -49,9 +49,12 @@ factory = ($ = jQuery, window, document) ->
             #console.log $current
             $('.active').removeClass('active')
             $current.addClass('active')
+
             #now find the current list item to activate
             $li = $('li')
             $($li.get(i)).addClass('active')
+            #also add to parent
+            $($li.get(i)).parents('li').addClass('active')
 
 
     # Recursive function that generates a table of contents list from a collection of nodes
