@@ -8,100 +8,40 @@ factory = ($ = jQuery, window, document) ->
   PLUGIN_NAME = 'tree'
 
   defaults =
-    content: '.content'
-    list:    '.list'
+    content:               '.content'
+    prepend:               true
+    listContainer:         null
+    filter:                ':header'
 
   # Plugin class
   class Plugin
-    constructor: (@element, options) ->
-      self = this
+    constructor: (@el, options) ->
+      plugin = this
 
-      @_name = PLUGIN_NAME
+      # Extend default settings
       @settings = $.extend {}, defaults, options
-      @_defaults = defaults
-      
-      $content = $(@settings.content)
 
-      # Descendents of content
-      $contentNodes = $content.find('*')
+      @$content = $(@el)
 
-      $listContainer = $(@settings.list)
+      if @settings.listContainer?
+        @$listContainer = $(@settings.listContainer)
 
-      $headers = $content.find(':header')
+      @$headers = @$content.find('*').filter(@settings.filter)
+
+      @$list = @listify(@$headers)
 
 
-      # Recursive function that generates a table of contents list from a collection of nodes
-      listify = ($nodes) =>
-
-        # Get top header level found in collection
-        topHeaderLevel = @topHeaderLevel($nodes)
-
-        # Exit if none of the nodes are headers
-        if not topHeaderLevel? then return null
-
-        # Create list
-        $list = $("<ul/>")
-
-        # Initialize empty jQuery object to contain nodes that fall between top-level headers
-        $between = $()
-
-        # Function to recursively listify and reset $between
-        listifyBetween = ->
-          if $between.length > 0
-            $list.find("li").last().append(listify($between))
-            $between = $()
-
-        # Loop through nodes
-        $nodes.each ->
-          $node = $(this)
-
-          # Check if current node is not a top level header
-          if not $node.is("h#{topHeaderLevel}")
-            $between = $between.add($node)
-          else
-            listifyBetween()
-
-            # Construct link
-            $link = $('<a/>').html($node.html())
-
-            # Give header an id
-            id = $node.attr('id')
-            if not id?
-              id = $node.text().toLowerCase().replace(/\s+/g, '-')
-
-              # Check if id is already on page
-              id = self.idCheck(id)
-
-              $node.attr('id', id)
-
-            # Set link href to header id
-            $link.attr('href', "##{id}")
-
-            # Construct list item
-            $item = $('<li/>').append($link)
-
-            # Attach reference from node to item, and vice versa
-            $item.data("plugin_#{PLUGIN_NAME}_header", $node)
-            $node.data("plugin_#{PLUGIN_NAME}_item", $item)
-
-            $list.append($item)
-
-        # OBOE
-        listifyBetween()
-
-        return $list
-
-      $list = listify($contentNodes)
-
-      $listContainer.append($list)        
-      
+      if @$listContainer?
+        @$listContainer.append(@$list)
+      else if @settings.prepend
+        @$content.prepend(@$list)
 
       # The right sidebar list is now created
       # Need to set first child as active
       $('li:first').addClass('active')
       this.isOnScreen
-      $(window).scroll ->
-        $.each $headers, (i, header) -> 
+      $(window).scroll =>
+        $.each @$headers, (i, header) -> 
           #console.log $header
           $current = $(header)
           difference = $current.offset().top - $(window).scrollTop()
@@ -112,6 +52,69 @@ factory = ($ = jQuery, window, document) ->
             #now find the current list item to activate
             $li = $('li')
             $($li.get(i)).addClass('active')
+
+
+    # Recursive function that generates a table of contents list from a collection of nodes
+    listify: ($nodes) ->
+      plugin = this
+
+      # Get top header level found in collection
+      topHeaderLevel = @topHeaderLevel($nodes)
+
+      # Exit if none of the nodes are headers
+      if not topHeaderLevel? then return null
+
+      # Create list
+      $list = $("<ul/>")
+
+      # Initialize empty jQuery object to contain nodes that fall between top-level headers
+      $between = $()
+
+      # Function to recursively listify and reset $between
+      listifyBetween = ->
+        if $between.length > 0
+          $list.find("li").last().append(plugin.listify($between))
+          $between = $()
+
+      # Loop through nodes
+      $nodes.each ->
+        $node = $(this)
+
+        # Check if current node is not a top level header
+        if not $node.is("h#{topHeaderLevel}")
+          $between = $between.add($node)
+        else
+          listifyBetween()
+
+          # Construct link
+          $link = $('<a/>').html($node.html())
+
+          # Give header an id
+          id = $node.attr('id')
+          if not id?
+            id = plugin.slugify($node.text())
+
+            # Check if id is already on page
+            id = plugin.uniqueId(id)
+
+            $node.attr('id', id)
+
+          # Set link href to header id
+          $link.attr('href', "##{id}")
+
+          # Construct list item
+          $item = $('<li/>').append($link)
+
+          # Attach reference from node to item, and vice versa
+          $item.data("plugin_#{PLUGIN_NAME}_header", $node)
+          $node.data("plugin_#{PLUGIN_NAME}_item", $item)
+
+          $list.append($item)
+
+      # OBOE
+      listifyBetween()
+
+      return $list
 
     isOnScreen: ->
       win = $(window)
@@ -127,23 +130,31 @@ factory = ($ = jQuery, window, document) ->
 
       return null
 
-    idCheck = (id) ->
+    uniqueId: (id = 'id') ->
       if $("##{id}").length > 0
         id += 0
-        return idCheck(id)
+        return @uniqueId(id)
       else
         return id
 
-    idCheck: idCheck
-
-    window.idCheck = idCheck
+    slugify: (text) ->
+      text.toString().toLowerCase()
+        .replace(/\s+/g, '-')           # Replace spaces with -
+        .replace(/[^\w\-]+/g, '')       # Remove all non-word chars
+        .replace(/\-\-+/g, '-')         # Replace multiple - with single -
+        .replace(/^-+/, '')             # Trim - from start of text
+        .replace(/-+$/, '');            # Trim - from end of text
 
   # A really lightweight plugin wrapper around the constructor,
   # preventing against multiple instantiations
   $.fn[PLUGIN_NAME] = (options) ->
-    @each ->
+    $(@map( ->
       unless $.data @, "plugin_#{PLUGIN_NAME}"
-        $.data @, "plugin_#{PLUGIN_NAME}", new Plugin @, options
+        plugin = new Plugin @, options
+        $.data @, "plugin_#{PLUGIN_NAME}", plugin
+        return plugin.$list)
+      .get(0)
+    )
 
 # Register module
 do (factory, window, document) -> 

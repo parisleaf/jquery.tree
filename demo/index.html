@@ -76,10 +76,9 @@
                 </div>
 		<script>
 			$(function() {
-				$("#container").tree({
-					content: ".content",
-                    list: ".list"
-				});
+				var $list = $(".content").tree({
+                    listContainer: '.list'
+                });
 			});
 		</script>
 	</body>
